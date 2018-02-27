@@ -28,7 +28,9 @@ import {
  *
  * @private
  */
-export const ID_KEY = typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
+export const ID_KEY =
+  /* istanbul ignore next: not worth extracting this into a function just for testing a ternary */
+  typeof Symbol !== 'undefined' ? Symbol('id') : '@@id';
 
 /**
  * Resolves the result of a query solely from the store (i.e. never hits the server).
@@ -56,7 +58,8 @@ export function readQueryFromStore<QueryType>(
   }).result;
 }
 
-const readStoreResolver: Resolver = (
+// Export for testing
+export const readStoreResolver: Resolver = (
   fieldName: string,
   idValue: IdValueWithPreviousResult,
   args: any,
@@ -214,7 +217,10 @@ that is directly manipulating the store; please file an issue.`);
  *
  * @private
  */
-function addPreviousResultToIdValues(value: any, previousResult: any): any {
+export function addPreviousResultToIdValues(
+  value: any,
+  previousResult: any,
+): any {
   // If the value is an `IdValue`, add the previous result to it whether or not that
   // `previousResult` is undefined.
   //
@@ -225,7 +231,9 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
       ...value,
       previousResult,
     };
-  } else if (Array.isArray(value)) {
+  }
+
+  if (Array.isArray(value)) {
     const idToPreviousResult: Map<string, any> = new Map();
 
     // If the previous result was an array, we want to build up our map of ids to previous results
@@ -235,7 +243,6 @@ function addPreviousResultToIdValues(value: any, previousResult: any): any {
         // item can be null
         if (item && item[ID_KEY]) {
           idToPreviousResult.set(item[ID_KEY], item);
-          // idToPreviousResult[item[ID_KEY]] = item;
         }
       });
     }

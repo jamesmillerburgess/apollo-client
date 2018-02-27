@@ -3,7 +3,12 @@ import { IdValue, JsonValue } from 'apollo-utilities';
 import gql from 'graphql-tag';
 
 import { NormalizedCache, StoreObject, HeuristicFragmentMatcher } from '../';
-import { readQueryFromStore } from '../readFromStore';
+import {
+  readQueryFromStore,
+  readStoreResolver,
+  assertIdValue,
+  addPreviousResultToIdValues,
+} from '../readFromStore';
 import { defaultNormalizedCacheFactory } from '../objectCache';
 
 const fragmentMatcherFunction = new HeuristicFragmentMatcher().match;
@@ -69,6 +74,7 @@ describe('reading from the store', () => {
       });
     }, /queries contain union or interface types/);
   });
+
   it('rejects malformed queries', () => {
     expect(() => {
       readQueryFromStore({
@@ -814,5 +820,88 @@ describe('reading from the store', () => {
         },
       ],
     });
+  });
+});
+
+describe('readStoreResolver', () => {
+  it('handles missing store objects', () => {
+    const fieldName = 'field';
+    const idValue = { type: 'id' };
+    const args = [];
+    const context = {
+      store: {
+        get: () => {},
+      },
+      cacheRedirects: true,
+      returnPartialData: true,
+    };
+    const execInfo = {};
+    const fieldValue = readStoreResolver(
+      fieldName,
+      idValue,
+      args,
+      context,
+      execInfo,
+    );
+    expect(fieldValue).toBe(undefined);
+  });
+
+  it('uses custom resolvers if one is available', () => {
+    const idValue = { type: 'id' };
+    const args = [];
+    const context = {
+      store: {
+        get: () => ({ __typename: 'typename' }),
+      },
+      cacheRedirects: {
+        typename: { field: (a, b, { getCacheKey }) => getCacheKey() },
+      },
+      dataIdFromObject: jest.fn(),
+      returnPartialData: true,
+    };
+    const execInfo = {};
+
+    let fieldName;
+    let fieldValue;
+
+    // Custom resolver exists
+    fieldName = 'field';
+    fieldValue = readStoreResolver(fieldName, idValue, args, context, execInfo);
+    expect(fieldValue.type).toBe('id');
+
+    // Custom resolver is missing
+    fieldName = 'not-a-field';
+    fieldValue = readStoreResolver(fieldName, idValue, args, context, execInfo);
+    expect(fieldValue).toBe(undefined);
+  });
+});
+
+describe('assertIdValue', () => {
+  it('throws if not passed an idValue', () => {
+    expect(assertIdValue).toThrowError(/Encountered a sub-selection/);
+  });
+});
+
+describe.only('addPreviousResultToIdValues', () => {
+  it.only('handles idValues', () => {
+    const value = { type: 'id' };
+    const previousResult = 'prev';
+    const newResult = addPreviousResultToIdValues(value, previousResult);
+    expect(newResult).toEqual({ type: 'id', previousResult: 'prev' });
+  });
+
+  it.only('handles arrays', () => {
+    const value = [{ type: 'id' }];
+    const previousResult = [];
+    const newResult = addPreviousResultToIdValues(value, previousResult);
+    expect(newResult).toEqual({ type: 'id', previousResult: 'prev' });
+  });
+
+  it.only('returns value if it is not an idValue or an array', () => {
+    const value = 1;
+    const previousResult = 'prev';
+    const newResult = addPreviousResultToIdValues(value, previousResult);
+    console.log(newResult);
+    expect(newResult).toBe(1);
   });
 });
