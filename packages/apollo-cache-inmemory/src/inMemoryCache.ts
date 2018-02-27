@@ -18,7 +18,7 @@ import { writeResultToStore } from './writeToStore';
 import { readQueryFromStore, diffQueryAgainstStore } from './readFromStore';
 import { defaultNormalizedCacheFactory } from './objectCache';
 import { record } from './recordingCache';
-const defaultConfig: ApolloReducerConfig = {
+export const defaultConfig: ApolloReducerConfig = {
   fragmentMatcher: new HeuristicFragmentMatcher(),
   dataIdFromObject: defaultDataIdFromObject,
   addTypename: true,
@@ -136,7 +136,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public evict(query: Cache.EvictOptions): Cache.EvictionResult {
-    throw new Error(`eviction is not implemented on InMemory Cache`);
+    throw new Error(`Eviction is not implemented on InMemoryCache`);
   }
 
   public reset(): Promise<void> {
