@@ -37,6 +37,7 @@ export class HeuristicFragmentMatcher implements FragmentMatcherInterface {
     }
 
     if (!obj.__typename) {
+      /* istanbul ignore else */
       if (!haveWarned) {
         console.warn(`You're using fragments in your queries, but either don't have the addTypename:
   true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.
