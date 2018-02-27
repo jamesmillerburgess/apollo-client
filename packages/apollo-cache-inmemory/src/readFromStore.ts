@@ -231,9 +231,7 @@ export function addPreviousResultToIdValues(
       ...value,
       previousResult,
     };
-  }
-
-  if (Array.isArray(value)) {
+  } else if (Array.isArray(value)) {
     const idToPreviousResult: Map<string, any> = new Map();
 
     // If the previous result was an array, we want to build up our map of ids to previous results
